@@ -45,11 +45,11 @@ var poly_java = /* color: #d63000 */ee.Geometry.Polygon(
           [109.2099659765777, -6.57241969194702],
           [108.7913071141131, -6.356372703124604],
           [107.8885920315653, -5.966181209973628]]]);
-var START_DATE_TRAIN = ee.Date('2020-05-01');
+var START_DATE_TRAIN = ee.Date('2020-05-15');
 var END_DATE_TRAIN = ee.Date('2020-05-31');
 
-var START_DATE_AREA = ee.Date('2014-01-01');
-var END_DATE_AREA = ee.Date('2021-09-30');
+var START_DATE_AREA = ee.Date('2014-10-01');
+var END_DATE_AREA = ee.Date('2020-09-30');
 
 var MAX_CLOUD_PROBABILITY_TRAIN = 5;
 var MAX_CLOUD_PROBABILITY_APPLIED = 40;
@@ -237,7 +237,8 @@ var vvvhDesc_AREA_TRAIN = desc_AREA_TRAIN
 // Filter to get images collected in interferometric wide swath mode.
 .filter(ee.Filter.eq('instrumentMode', 'IW'));
 // Create a composite from means at different polarizations and look angles.
-
+  print(asc_AREA_TRAIN)
+    print(desc_AREA_TRAIN)
 var composite_AREA_TRAIN = ee.Image.cat([
 vvvhAsc_AREA_TRAIN.select('VV').median(),
 vvvhAsc_AREA_TRAIN.select('VH').median(),
@@ -421,7 +422,7 @@ var months_long = ["January", "February", "March","April",
 
 
 // Add these to the interface.
-
+maps[0].centerObject(poly_java);
 
 function ricegrowthstages(code, ml, year, month, enddate, biweekly,month_biweekly_str) {
   var box_filteredArea;
@@ -435,7 +436,7 @@ function ricegrowthstages(code, ml, year, month, enddate, biweekly,month_biweekl
   var S1_criteria_AREA_APPLIED = ee.Filter.and(
       ee.Filter.bounds(box_filteredArea), ee.Filter.date(START_DATE_AREA, END_DATE_AREA));
   var s1_AREA_APPLIED = s1_raw.filter(S1_criteria_AREA_APPLIED);
-  
+
   // Filter to get images from different look angles
   var asc_AREA_APPLIED = s1_AREA_APPLIED.filter(ee.Filter.eq('orbitProperties_pass', 'ASCENDING'));
   var desc_AREA_APPLIED = s1_AREA_APPLIED.filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'));
@@ -640,6 +641,18 @@ print(month_biweekly_str)
   maps[0].clear();
   maps[0].layers().set(0, classified_S2_LS8_MOD13Q1_rename_fusion_mask_APPLIED1_SLOPE.visualize(imageVisParam_classify));
   maps[0].add(ui.Label('Fusion on ' + date_APPLIED1_data.codename + '-' + year,{position :'bottom-left'}));
+  var class_areas = ee.Image.pixelArea().addBands(classified_S2_LS8_MOD13Q1_rename_fusion_mask_APPLIED1_SLOPE)
+  .reduceRegion({
+    reducer: ee.Reducer.sum().group({
+      groupField: 1,
+      groupName: 'code',
+    }),
+    geometry: box_filteredArea,
+    scale: 1000,  
+    maxPixels: 1e10
+  }).get('groups');
+  
+  print(class_areas)
 
 //APPLIED2
   var LS8SR_APPLIED2 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR");
