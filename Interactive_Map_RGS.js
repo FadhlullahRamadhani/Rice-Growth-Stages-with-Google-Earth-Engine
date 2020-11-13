@@ -51,7 +51,7 @@ var END_DATE_TRAIN = ee.Date('2020-05-31');
 var START_DATE_AREA = ee.Date('2014-10-01');
 var END_DATE_AREA = ee.Date('2020-09-30');
 
-var MAX_CLOUD_PROBABILITY_TRAIN = 5;
+var MAX_CLOUD_PROBABILITY_TRAIN = 40;
 var MAX_CLOUD_PROBABILITY_APPLIED = 40;
 
 function formatDate(date) {
@@ -178,7 +178,7 @@ var bands_S2 = ['B2_last', 'B3_last', 'B4_last','B5_last', 'B6_last', 'B7_last',
 var S2_training = s2CloudMasked_TRAIN.select(bands_S2).sampleRegions({
   collection: rice_points,
   properties: [label],
-  scale: 10
+  scale: 30
 });
 
 
