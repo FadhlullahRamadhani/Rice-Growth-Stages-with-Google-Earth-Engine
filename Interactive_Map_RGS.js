@@ -45,6 +45,20 @@ var poly_java = /* color: #d63000 */ee.Geometry.Polygon(
           [109.2099659765777, -6.57241969194702],
           [108.7913071141131, -6.356372703124604],
           [107.8885920315653, -5.966181209973628]]]);
+          
+var indonesia = 
+    /* color: #d63000 */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[93.67362422316903, 6.815970308576921],
+          [93.67362422316903, -11.028838838453117],
+          [143.85917109816904, -11.028838838453117],
+          [143.85917109816904, 6.815970308576921]]], null, false);
+          
 var START_DATE_TRAIN = ee.Date('2020-05-15');
 var END_DATE_TRAIN = ee.Date('2020-05-31');
 
@@ -132,6 +146,7 @@ var LS8_criteria_TRAIN = ee.Filter.and(
 ee.Filter.bounds(training_area_RGS), 
 ee.Filter.date(START_DATE_TRAIN, END_DATE_TRAIN));
 LS8SR_TRAIN = LS8SR_TRAIN.filter(LS8_criteria_TRAIN).map(maskL8sr);
+
 var LS8SR_TRAIN_last= LS8SR_TRAIN.reduce(ee.Reducer.lastNonNull());
 // Use these bands for prediction.
 var bands_LS8 = ['B1_last', 'B2_last', 'B3_last','B4_last', 'B5_last', 'B6_last', 'B7_last'];
@@ -157,7 +172,7 @@ var S2_criteria_TRAIN = ee.Filter.and(ee.Filter.bounds(training_area_RGS),
 ee.Filter.date(START_DATE_TRAIN, END_DATE_TRAIN));
 
 var S2SR_TRAIN = S2SR.filter(S2_criteria_TRAIN).map(S2_maskEdges);
-print(S2SR_TRAIN)
+//print(S2SR_TRAIN)
 var s2Clouds_TRAIN = s2Clouds.filter(S2_criteria_TRAIN);
 
 // Join S2 SR with cloud probability dataset to add cloud mask.
@@ -237,8 +252,8 @@ var vvvhDesc_AREA_TRAIN = desc_AREA_TRAIN
 // Filter to get images collected in interferometric wide swath mode.
 .filter(ee.Filter.eq('instrumentMode', 'IW'));
 // Create a composite from means at different polarizations and look angles.
-  print(asc_AREA_TRAIN)
-    print(desc_AREA_TRAIN)
+  //print(asc_AREA_TRAIN)
+   // print(desc_AREA_TRAIN)
 var composite_AREA_TRAIN = ee.Image.cat([
 vvvhAsc_AREA_TRAIN.select('VV').median(),
 vvvhAsc_AREA_TRAIN.select('VH').median(),
@@ -543,13 +558,15 @@ print(month_biweekly_str)
   //APPLIED1
   var LS8SR_APPLIED1 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR");
   var LS8_criteria_APPLIED1 = ee.Filter.and(
-  ee.Filter.bounds(box_filteredArea), 
+  ee.Filter.bounds(indonesia), 
   ee.Filter.date(START_DATE_APPLIED1, END_DATE_APPLIED1));
   LS8SR_APPLIED1 = LS8SR_APPLIED1.filter(LS8_criteria_APPLIED1).map(maskL8sr);
-  var count_LS8 = LS8SR_APPLIED1.filter(LS8_criteria_APPLIED1).size();
   var LS8SR_APPLIED1_last= LS8SR_APPLIED1.reduce(ee.Reducer.lastNonNull());
 
   // Classify the image with the same bands used for APPLIED1.
+    
+
+    
   var classified_LS8_APPLIED1;
   if (ml =='3. Support Vector Machine') {
     classified_LS8_APPLIED1 = LS8SR_APPLIED1_last.select(bands_LS8).classify(trained_LS8_SVM);
@@ -560,20 +577,18 @@ print(month_biweekly_str)
   if (ml =='2. CART') {
     classified_LS8_APPLIED1 = LS8SR_APPLIED1_last.select(bands_LS8).classify(trained_LS8_CART);
   } 
-  
-  var S2SR = ee.ImageCollection('COPERNICUS/S2_SR');
-  var s2Clouds = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY');
+
+  var S2SR_1 = ee.ImageCollection('COPERNICUS/S2_SR');
+  var s2Clouds_1 = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY');
   // Filter input collections by desired data range and region.
 
   var S2_criteria_APPLIED1 = ee.Filter.and(ee.Filter.bounds(box_filteredArea), 
   ee.Filter.date(START_DATE_APPLIED1, END_DATE_APPLIED1));
 
   
-  var S2SR_APPLIED1 = S2SR.filter(S2_criteria_APPLIED1).map(S2_maskEdges);
-  var s2Clouds_APPLIED1 = s2Clouds.filter(S2_criteria_APPLIED1);
+  var S2SR_APPLIED1 = S2SR_1.filter(S2_criteria_APPLIED1).map(S2_maskEdges);
+  var s2Clouds_APPLIED1 = s2Clouds_1.filter(S2_criteria_APPLIED1);
   
-  var count_S2 = S2SR.filter(S2_criteria_APPLIED1).size();
-
   // Join S2 SR with cloud probability dataset to add cloud mask.
   var S2SRWithCloudMask_APPLIED1 = ee.Join.saveFirst('cloud_mask').apply({
     primary: S2SR_APPLIED1,
@@ -608,11 +623,10 @@ print(month_biweekly_str)
   } 
  var MOD13Q1_APPLIED1 = ee.ImageCollection("MODIS/006/MOD13Q1");
   var MOD13Q1_criteria_APPLIED1 = ee.Filter.and(
-  ee.Filter.bounds(box_filteredArea), 
+  ee.Filter.bounds(indonesia), 
   ee.Filter.date(START_DATE_APPLIED1, END_DATE_APPLIED1));
   MOD13Q1_APPLIED1 = MOD13Q1_APPLIED1.filter(MOD13Q1_criteria_APPLIED1).map(maskMOD13Q1);
-  
-  var count_MOD13Q1 = MOD13Q1_APPLIED1.filter(MOD13Q1_criteria_APPLIED1).size();
+
   var MOD13Q1_APPLIED1_last= MOD13Q1_APPLIED1.reduce(ee.Reducer.lastNonNull());
 
   // Classify the image with the same bands used for APPLIED1.
@@ -653,15 +667,15 @@ print(month_biweekly_str)
     maxPixels: 1e10
   }).get('groups');
   
-  print(class_areas)
+  //print(class_areas)
 
 //APPLIED2
   var LS8SR_APPLIED2 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR");
   var LS8_criteria_APPLIED2 = ee.Filter.and(
-  ee.Filter.bounds(box_filteredArea), 
+  ee.Filter.bounds(indonesia), 
   ee.Filter.date(START_DATE_APPLIED2, END_DATE_APPLIED2));
   LS8SR_APPLIED2 = LS8SR_APPLIED2.filter(LS8_criteria_APPLIED2).map(maskL8sr);
-  var count_LS8 = LS8SR_APPLIED2.filter(LS8_criteria_APPLIED2).size();
+
   var LS8SR_APPLIED2_last= LS8SR_APPLIED2.reduce(ee.Reducer.lastNonNull());
 
   // Classify the image with the same bands used for APPLIED2.
@@ -676,18 +690,17 @@ print(month_biweekly_str)
     classified_LS8_APPLIED2 = LS8SR_APPLIED2_last.select(bands_LS8).classify(trained_LS8_CART);
   } 
   
-  var S2SR = ee.ImageCollection('COPERNICUS/S2_SR');
-  var s2Clouds = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY');
+  var S2SR_2 = ee.ImageCollection('COPERNICUS/S2_SR');
+  var s2Clouds_2 = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY');
   // Filter input collections by desired data range and region.
 
   var S2_criteria_APPLIED2 = ee.Filter.and(ee.Filter.bounds(box_filteredArea), 
   ee.Filter.date(START_DATE_APPLIED2, END_DATE_APPLIED2));
 
   
-  var S2SR_APPLIED2 = S2SR.filter(S2_criteria_APPLIED2).map(S2_maskEdges);
-  var s2Clouds_APPLIED2 = s2Clouds.filter(S2_criteria_APPLIED2);
+  var S2SR_APPLIED2 = S2SR_2.filter(S2_criteria_APPLIED2).map(S2_maskEdges);
+  var s2Clouds_APPLIED2 = s2Clouds_2.filter(S2_criteria_APPLIED2);
   
-  var count_S2 = S2SR.filter(S2_criteria_APPLIED2).size();
 
   // Join S2 SR with cloud probability dataset to add cloud mask.
   var S2SRWithCloudMask_APPLIED2 = ee.Join.saveFirst('cloud_mask').apply({
@@ -723,11 +736,11 @@ print(month_biweekly_str)
   } 
  var MOD13Q1_APPLIED2 = ee.ImageCollection("MODIS/006/MOD13Q1");
   var MOD13Q1_criteria_APPLIED2 = ee.Filter.and(
-  ee.Filter.bounds(box_filteredArea), 
+  ee.Filter.bounds(indonesia), 
   ee.Filter.date(START_DATE_APPLIED2, END_DATE_APPLIED2));
   MOD13Q1_APPLIED2 = MOD13Q1_APPLIED2.filter(MOD13Q1_criteria_APPLIED2).map(maskMOD13Q1);
   
-  var count_MOD13Q1 = MOD13Q1_APPLIED2.filter(MOD13Q1_criteria_APPLIED2).size();
+
   var MOD13Q1_APPLIED2_last= MOD13Q1_APPLIED2.reduce(ee.Reducer.lastNonNull());
 
   // Classify the image with the same bands used for APPLIED2.
@@ -761,10 +774,10 @@ print(month_biweekly_str)
 //APPLIED3
   var LS8SR_APPLIED3 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR");
   var LS8_criteria_APPLIED3 = ee.Filter.and(
-  ee.Filter.bounds(box_filteredArea), 
+  ee.Filter.bounds(indonesia), 
   ee.Filter.date(START_DATE_APPLIED3, END_DATE_APPLIED3));
   LS8SR_APPLIED3 = LS8SR_APPLIED3.filter(LS8_criteria_APPLIED3).map(maskL8sr);
-  var count_LS8 = LS8SR_APPLIED3.filter(LS8_criteria_APPLIED3).size();
+
   var LS8SR_APPLIED3_last= LS8SR_APPLIED3.reduce(ee.Reducer.lastNonNull());
 
   // Classify the image with the same bands used for APPLIED3.
@@ -779,18 +792,17 @@ print(month_biweekly_str)
     classified_LS8_APPLIED3 = LS8SR_APPLIED3_last.select(bands_LS8).classify(trained_LS8_CART);
   } 
   
-  var S2SR = ee.ImageCollection('COPERNICUS/S2_SR');
-  var s2Clouds = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY');
+  var S2SR_3 = ee.ImageCollection('COPERNICUS/S2_SR');
+  var s2Clouds_3 = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY');
   // Filter input collections by desired data range and region.
 
   var S2_criteria_APPLIED3 = ee.Filter.and(ee.Filter.bounds(box_filteredArea), 
   ee.Filter.date(START_DATE_APPLIED3, END_DATE_APPLIED3));
 
   
-  var S2SR_APPLIED3 = S2SR.filter(S2_criteria_APPLIED3).map(S2_maskEdges);
-  var s2Clouds_APPLIED3 = s2Clouds.filter(S2_criteria_APPLIED3);
+  var S2SR_APPLIED3 = S2SR_3.filter(S2_criteria_APPLIED3).map(S2_maskEdges);
+  var s2Clouds_APPLIED3 = s2Clouds_3.filter(S2_criteria_APPLIED3);
   
-  var count_S2 = S2SR.filter(S2_criteria_APPLIED3).size();
 
   // Join S2 SR with cloud probability dataset to add cloud mask.
   var S2SRWithCloudMask_APPLIED3 = ee.Join.saveFirst('cloud_mask').apply({
@@ -826,11 +838,10 @@ print(month_biweekly_str)
   } 
  var MOD13Q1_APPLIED3 = ee.ImageCollection("MODIS/006/MOD13Q1");
   var MOD13Q1_criteria_APPLIED3 = ee.Filter.and(
-  ee.Filter.bounds(box_filteredArea), 
+  ee.Filter.bounds(indonesia), 
   ee.Filter.date(START_DATE_APPLIED3, END_DATE_APPLIED3));
   MOD13Q1_APPLIED3 = MOD13Q1_APPLIED3.filter(MOD13Q1_criteria_APPLIED3).map(maskMOD13Q1);
-  
-  var count_MOD13Q1 = MOD13Q1_APPLIED3.filter(MOD13Q1_criteria_APPLIED3).size();
+
   var MOD13Q1_APPLIED3_last= MOD13Q1_APPLIED3.reduce(ee.Reducer.lastNonNull());
 
   // Classify the image with the same bands used for APPLIED3.
@@ -867,7 +878,7 @@ print(month_biweekly_str)
   ee.Filter.bounds(box_filteredArea), 
   ee.Filter.date(START_DATE_APPLIED4, END_DATE_APPLIED4));
   LS8SR_APPLIED4 = LS8SR_APPLIED4.filter(LS8_criteria_APPLIED4).map(maskL8sr);
-  var count_LS8 = LS8SR_APPLIED4.filter(LS8_criteria_APPLIED4).size();
+
   var LS8SR_APPLIED4_last= LS8SR_APPLIED4.reduce(ee.Reducer.lastNonNull());
 
   // Classify the image with the same bands used for APPLIED4.
@@ -882,19 +893,17 @@ print(month_biweekly_str)
     classified_LS8_APPLIED4 = LS8SR_APPLIED4_last.select(bands_LS8).classify(trained_LS8_CART);
   } 
   
-  var S2SR = ee.ImageCollection('COPERNICUS/S2_SR');
-  var s2Clouds = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY');
+  var S2SR_4 = ee.ImageCollection('COPERNICUS/S2_SR');
+  var s2Clouds_4 = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY');
   // Filter input collections by desired data range and region.
 
   var S2_criteria_APPLIED4 = ee.Filter.and(ee.Filter.bounds(box_filteredArea), 
   ee.Filter.date(START_DATE_APPLIED4, END_DATE_APPLIED4));
 
   
-  var S2SR_APPLIED4 = S2SR.filter(S2_criteria_APPLIED4).map(S2_maskEdges);
-  var s2Clouds_APPLIED4 = s2Clouds.filter(S2_criteria_APPLIED4);
+  var S2SR_APPLIED4 = S2SR_4.filter(S2_criteria_APPLIED4).map(S2_maskEdges);
+  var s2Clouds_APPLIED4 = s2Clouds_4.filter(S2_criteria_APPLIED4);
   
-  var count_S2 = S2SR.filter(S2_criteria_APPLIED4).size();
-
   // Join S2 SR with cloud probability dataset to add cloud mask.
   var S2SRWithCloudMask_APPLIED4 = ee.Join.saveFirst('cloud_mask').apply({
     primary: S2SR_APPLIED4,
@@ -929,11 +938,10 @@ print(month_biweekly_str)
   } 
  var MOD13Q1_APPLIED4 = ee.ImageCollection("MODIS/006/MOD13Q1");
   var MOD13Q1_criteria_APPLIED4 = ee.Filter.and(
-  ee.Filter.bounds(box_filteredArea), 
+  ee.Filter.bounds(indonesia), 
   ee.Filter.date(START_DATE_APPLIED4, END_DATE_APPLIED4));
   MOD13Q1_APPLIED4 = MOD13Q1_APPLIED4.filter(MOD13Q1_criteria_APPLIED4).map(maskMOD13Q1);
   
-  var count_MOD13Q1 = MOD13Q1_APPLIED4.filter(MOD13Q1_criteria_APPLIED4).size();
   var MOD13Q1_APPLIED4_last= MOD13Q1_APPLIED4.reduce(ee.Reducer.lastNonNull());
 
   // Classify the image with the same bands used for APPLIED4.
@@ -1194,3 +1202,4 @@ var mapGrid = ui.Panel(
 mlSelect.setValue('1. Random Forest',false)
 ui.root.widgets().reset([mapGrid,toolPanel]);
 maps[0].centerObject(poly_java);
+
