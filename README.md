@@ -7,10 +7,10 @@ This is a source code to produce a map for rice growth stages based on rice area
 The rice growth stages (RGS)is from the fusion between Sentinel-2, Landsat-8 OLI, and MOD13Q1 and the rice area are from median value from multitemporal Sentinel-1.
 
 They are four class of RGS:
-1. Bare land
-2. Vegetative stage
-3. Reproductive stage
-4. Ripening stage
+1. Bare land (code=1)
+2. Vegetative stage (code=2)
+3. Reproductive stage (code=3)
+4. Ripening stage (code=4)
 
 The rice is consist of three classes
 1. Rice area
